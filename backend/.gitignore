@@ -1,0 +1,9 @@
+node_modules/
+dist/
+.env.local
+.env.production
+.env
+*.js.map
+coverage/
+.nyc_output/
+prisma/migrations/

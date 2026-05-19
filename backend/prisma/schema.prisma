@@ -1,0 +1,180 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// Users
+// ============================================
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  password  String
+
+  // Stripe Connect: conta conectada do usuário para receber transfers
+  stripeAccountId String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  projects       Project[]
+  collaborations Collaborator[]
+
+  @@map("users")
+}
+
+// ============================================
+// Projects
+// ============================================
+model Project {
+  id          String  @id @default(cuid())
+  userId      String
+  user        User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name        String
+  description String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  collaborators Collaborator[]
+  payments      Payment[]
+
+  @@index([userId])
+  @@map("projects")
+}
+
+// ============================================
+// Collaborators
+// ============================================
+model Collaborator {
+  id        String  @id @default(cuid())
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  // Link opcional para user cadastrado
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  email      String
+  name       String
+  percentage Decimal @db.Decimal(5, 2) // 0.00 a 100.00
+
+  // Stripe Connect: ID da conta conectada para receber transfers
+  stripeAccountId String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  splits    Split[]
+  transfers Transfer[]
+
+  @@unique([projectId, email])
+  @@index([projectId])
+  @@index([userId])
+  @@map("collaborators")
+}
+
+// ============================================
+// Payments
+// ============================================
+model Payment {
+  id        String  @id @default(cuid())
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  amount   Decimal @db.Decimal(12, 2)
+  currency String  @default("BRL")
+
+  stripeId String @unique
+  status   String @default("pending") // pending, completed, failed
+
+  metadata Json? // {customerEmail, customerName}
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  splits        Split[]
+  webhookEvents StripeWebhook[]
+
+  @@index([projectId])
+  @@index([status])
+  @@map("payments")
+}
+
+// ============================================
+// Splits
+// ============================================
+model Split {
+  id             String       @id @default(cuid())
+  paymentId      String
+  payment        Payment      @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+  collaboratorId String
+  collaborator   Collaborator @relation(fields: [collaboratorId], references: [id], onDelete: Cascade)
+
+  amount Decimal @db.Decimal(12, 2)
+  status String  @default("pending") // pending, transferred, failed
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  transfer Transfer?
+
+  @@index([paymentId])
+  @@index([collaboratorId])
+  @@index([status])
+  @@map("splits")
+}
+
+// ============================================
+// Transfers (via Stripe Connect)
+// ============================================
+model Transfer {
+  id             String       @id @default(cuid())
+  splitId        String       @unique
+  split          Split        @relation(fields: [splitId], references: [id], onDelete: Cascade)
+  collaboratorId String
+  collaborator   Collaborator @relation(fields: [collaboratorId], references: [id], onDelete: Cascade)
+
+  method String  // "stripe_transfer"
+  amount Decimal @db.Decimal(12, 2)
+  status String  @default("pending") // pending, processing, completed, failed
+
+  stripeTransferId String? // ID do Transfer no Stripe
+  externalStatus   String?
+  errorMessage   String?
+
+  createdAt   DateTime  @default(now())
+  completedAt DateTime?
+
+  retryCount  Int       @default(0)
+  lastRetryAt DateTime?
+
+  @@index([collaboratorId])
+  @@index([status])
+  @@map("transfers")
+}
+
+// ============================================
+// StripeWebhook (auditoria + idempotência)
+// ============================================
+model StripeWebhook {
+  id        String   @id @default(cuid())
+  paymentId String?
+  payment   Payment? @relation(fields: [paymentId], references: [id], onDelete: SetNull)
+
+  eventId   String  @unique
+  type      String
+  payload   Json
+  processed Boolean @default(false)
+
+  createdAt DateTime @default(now())
+
+  @@index([eventId])
+  @@index([processed])
+  @@map("stripe_webhooks")
+}
