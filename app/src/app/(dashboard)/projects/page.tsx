@@ -7,7 +7,7 @@ import { toast } from 'sonner';
 import { projectQueries } from '@/lib/queries';
 import { getErrorMessage } from '@/lib/api';
 import { formatCurrency, formatDate } from '@/lib/utils';
-import { Plus, FolderOpen, ExternalLink, Copy, Trash2, X } from 'lucide-react';
+import { Plus, FolderOpen, ExternalLink, Copy, Trash2, X, ArrowUpRight } from 'lucide-react';
 
 function CreateModal({ onClose }: { onClose: () => void }) {
   const qc = useQueryClient();
@@ -36,13 +36,16 @@ function CreateModal({ onClose }: { onClose: () => void }) {
   return (
     <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div className="modal fade-up">
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
-          <h2 style={{ fontSize: 17, fontWeight: 600, color: 'var(--ink)' }}>Novo projeto</h2>
-          <button onClick={onClose} className="btn-ghost" style={{ padding: '6px', border: 'none' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
+          <div>
+            <p style={{ fontSize: 9.5, fontWeight: 700, color: 'rgba(255,255,255,0.25)', textTransform: 'uppercase', letterSpacing: '0.2em', marginBottom: 4 }}>Novo projeto</p>
+            <h2 style={{ fontSize: 20, fontWeight: 500, color: '#fff', letterSpacing: '-0.02em' }}>Criar projeto</h2>
+          </div>
+          <button onClick={onClose} className="btn-ghost" style={{ padding: '7px', border: 'none' }}>
             <X size={16} />
           </button>
         </div>
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <div>
             <label className="field-label">Nome do projeto</label>
             <input
@@ -52,7 +55,7 @@ function CreateModal({ onClose }: { onClose: () => void }) {
               onChange={(e) => setName(e.target.value)}
               autoFocus
             />
-            {errors.name && <p style={{ fontSize: 11.5, color: '#EF4444', marginTop: 4 }}>{errors.name}</p>}
+            {errors.name && <p style={{ fontSize: 11.5, color: '#EF4444', marginTop: 5 }}>{errors.name}</p>}
           </div>
           <div>
             <label className="field-label">Descrição (opcional)</label>
@@ -62,7 +65,6 @@ function CreateModal({ onClose }: { onClose: () => void }) {
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={3}
-              style={{ resize: 'vertical', lineHeight: 1.5 }}
             />
           </div>
           <div style={{ display: 'flex', gap: 10, marginTop: 4, justifyContent: 'flex-end' }}>
@@ -106,12 +108,25 @@ export default function ProjectsPage() {
   }
 
   return (
-    <div style={{ maxWidth: 900 }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
+    <div style={{ maxWidth: 900, display: 'flex', flexDirection: 'column', gap: 28 }}>
+
+      {/* Header */}
+      <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 16, paddingTop: 8 }}>
         <div>
-          <h1 style={{ fontSize: 20, fontWeight: 600, color: 'var(--ink)' }}>Projetos</h1>
-          <p style={{ fontSize: 13, color: 'var(--ink-4)', marginTop: 2 }}>
-            {data?.total ?? 0} projeto{data?.total !== 1 ? 's' : ''}
+          <div style={{
+            display: 'inline-flex', alignItems: 'center', gap: 6,
+            padding: '4px 12px', borderRadius: 999,
+            background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)',
+            fontSize: 9.5, fontWeight: 700, color: 'rgba(255,255,255,0.3)',
+            textTransform: 'uppercase' as const, letterSpacing: '0.3em', marginBottom: 10,
+          }}>
+            Workspace
+          </div>
+          <h1 style={{ fontSize: 32, fontWeight: 500, color: '#fff', letterSpacing: '-0.03em', lineHeight: 1 }}>
+            Projetos
+          </h1>
+          <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.25)', marginTop: 6 }}>
+            {data?.total ?? 0} projeto{data?.total !== 1 ? 's' : ''} criado{data?.total !== 1 ? 's' : ''}
           </p>
         </div>
         <button className="btn-primary" onClick={() => setShowCreate(true)}>
@@ -120,84 +135,120 @@ export default function ProjectsPage() {
         </button>
       </div>
 
+      {/* Content */}
       {isLoading ? (
-        <div style={{ display: 'grid', gap: 12 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="card skeleton" style={{ height: 100 }} />
+            <div key={i} className="skeleton" style={{ height: 88, borderRadius: 20 }} />
           ))}
         </div>
       ) : data?.projects.length === 0 ? (
-        <div className="card" style={{ textAlign: 'center', padding: '48px 24px' }}>
-          <FolderOpen size={36} style={{ color: 'var(--ink-4)', margin: '0 auto 12px' }} />
-          <p style={{ fontSize: 15, fontWeight: 500, color: 'var(--ink-2)', marginBottom: 6 }}>Nenhum projeto ainda</p>
-          <p style={{ fontSize: 13, color: 'var(--ink-4)', marginBottom: 20 }}>Crie seu primeiro projeto e comece a dividir pagamentos</p>
-          <button className="btn-primary" onClick={() => setShowCreate(true)}>
+        <div style={{
+          background: '#050505', border: '1px solid rgba(255,255,255,0.05)',
+          borderRadius: 28, padding: '64px 32px', textAlign: 'center' as const,
+          display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: 12,
+        }}>
+          <div style={{
+            width: 56, height: 56, borderRadius: 16, background: 'rgba(255,74,42,0.08)',
+            border: '1px solid rgba(255,74,42,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+            marginBottom: 4,
+          }}>
+            <FolderOpen size={24} style={{ color: '#FF4A2A' }} />
+          </div>
+          <p style={{ fontSize: 16, fontWeight: 500, color: 'rgba(255,255,255,0.7)' }}>Nenhum projeto ainda</p>
+          <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.25)', maxWidth: 320 }}>
+            Crie seu primeiro projeto e comece a dividir pagamentos com seus colaboradores
+          </p>
+          <button className="btn-primary" style={{ marginTop: 8 }} onClick={() => setShowCreate(true)}>
             <Plus size={14} />
             Criar projeto
           </button>
         </div>
       ) : (
-        <div style={{ display: 'grid', gap: 10 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {data?.projects.map((p) => (
             <div
               key={p.id}
-              className="card"
-              style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '16px 20px', cursor: 'pointer', transition: 'border-color var(--t-fast)' }}
+              style={{
+                background: '#050505', border: '1px solid rgba(255,255,255,0.05)',
+                borderRadius: 20, padding: '16px 20px',
+                display: 'flex', alignItems: 'center', gap: 16,
+                cursor: 'pointer', transition: 'border-color 160ms ease, background 160ms ease',
+              }}
               onClick={() => router.push(`/projects/${p.id}`)}
-              onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.borderColor = 'var(--line-strong)')}
-              onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.borderColor = 'var(--line)')}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)';
+                e.currentTarget.style.background = '#080808';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = 'rgba(255,255,255,0.05)';
+                e.currentTarget.style.background = '#050505';
+              }}
             >
+              {/* Icon */}
               <div style={{
-                width: 40, height: 40, borderRadius: 10, background: 'var(--accent-soft)',
+                width: 42, height: 42, borderRadius: 12,
+                background: 'rgba(255,74,42,0.08)', border: '1px solid rgba(255,74,42,0.15)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
               }}>
-                <FolderOpen size={18} style={{ color: 'var(--accent)' }} />
+                <FolderOpen size={18} style={{ color: '#FF4A2A' }} />
               </div>
 
+              {/* Info */}
               <div style={{ flex: 1, minWidth: 0 }}>
-                <p style={{ fontSize: 14.5, fontWeight: 500, color: 'var(--ink)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                <p style={{
+                  fontSize: 14.5, fontWeight: 500, color: 'rgba(255,255,255,0.85)',
+                  whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                }}>
                   {p.name}
                 </p>
-                <p style={{ fontSize: 12, color: 'var(--ink-4)', marginTop: 2 }}>
+                <p style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.25)', marginTop: 2 }}>
                   {formatDate(p.createdAt)} · {p.collaboratorCount ?? 0} colaborador{p.collaboratorCount !== 1 ? 'es' : ''}
                 </p>
               </div>
 
-              <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                <p style={{ fontSize: 16, fontWeight: 600, color: 'var(--ink)', fontFamily: 'var(--font-geist-mono, monospace)' }}>
+              {/* Revenue */}
+              <div style={{ textAlign: 'right' as const, flexShrink: 0 }}>
+                <p style={{
+                  fontSize: 16, fontWeight: 600, color: '#fff',
+                  fontFamily: 'var(--font-geist-mono, monospace)', letterSpacing: '-0.02em',
+                }}>
                   {formatCurrency(p.totalRevenue ?? 0)}
                 </p>
-                <p style={{ fontSize: 11.5, color: 'var(--ink-4)' }}>
+                <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.25)', marginTop: 2 }}>
                   {p.totalPayments ?? 0} pagamento{p.totalPayments !== 1 ? 's' : ''}
                 </p>
               </div>
 
-              <div style={{ display: 'flex', gap: 6, flexShrink: 0 }} onClick={(e) => e.stopPropagation()}>
+              {/* Actions */}
+              <div style={{ display: 'flex', gap: 4, flexShrink: 0 }} onClick={(e) => e.stopPropagation()}>
                 <button
                   className="btn-ghost"
-                  style={{ padding: '6px', border: 'none' }}
+                  style={{ padding: '7px', border: 'none' }}
                   onClick={() => copyLink(p.paymentLink)}
-                  title="Copiar link de pagamento"
+                  title="Copiar link"
                 >
-                  <Copy size={14} />
+                  <Copy size={13} />
                 </button>
                 <a
                   href={p.paymentLink}
                   target="_blank"
                   rel="noreferrer"
                   className="btn-ghost"
-                  style={{ padding: '6px', border: 'none', textDecoration: 'none' }}
+                  style={{ padding: '7px', border: 'none', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
                   title="Abrir link"
                 >
-                  <ExternalLink size={14} />
+                  <ArrowUpRight size={13} />
                 </a>
                 <button
                   className="btn-ghost"
-                  style={{ padding: '6px', border: 'none', color: '#EF4444' }}
+                  style={{ padding: '7px', border: 'none', color: 'rgba(239,68,68,0.7)' }}
                   onClick={() => handleDelete(p.id, p.name)}
                   title="Remover"
+                  onMouseEnter={(e) => (e.currentTarget.style.color = '#EF4444')}
+                  onMouseLeave={(e) => (e.currentTarget.style.color = 'rgba(239,68,68,0.7)')}
                 >
-                  <Trash2 size={14} />
+                  <Trash2 size={13} />
                 </button>
               </div>
             </div>
